@@ -99,6 +99,11 @@ class Article extends \yii\db\ActiveRecord
         return $this->hasOne(Category::className(), ['id' => 'category_id']);
     }
 
+    public function getSelectedCategory()
+    {
+        return !empty($this->category->id) ? $this->category->id : '';
+    }
+
     public function saveCategory($category_id)
     {
         $category = Category::findOne($category_id);
@@ -108,6 +113,29 @@ class Article extends \yii\db\ActiveRecord
             $this->link('category', $category);
             return true;
         }
+    }
 
+    public function getTags()
+    {
+        return $this->hasMany(Tag::className(), ['id' => 'tag_id'])
+            ->viaTable('article_tag', ['article_id' => 'id']);
+    }
+
+    public function getSelectedTags()
+    {
+        return array_column($this->getTags()->select('id')->asArray()->all(), 'id');
+    }
+
+    public function saveTags($tags)
+    {
+        if (is_array($tags))
+        {
+            ArticleTag::deleteAll(['article_id' => $this->id]);
+            foreach ($tags as $tag_id)
+            {
+                $tag = Tag::findOne($tag_id);
+                $this->link('tags', $tag);
+            }
+        }
     }
 }
